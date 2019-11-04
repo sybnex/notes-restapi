@@ -15,7 +15,7 @@ class MyApi(Api):
         return url_for(self.endpoint('specs'), _external=True, _scheme=scheme)
 
 app = Flask(__name__)
-api = Api(app)
+api = MyApi(app)
 
 notes = [
     {
@@ -23,8 +23,8 @@ notes = [
         "data": False
     },
     {
-        "name": "test",
-        "data": 78
+        "name": "healthz",
+        "data": True
     }
 ]
 
