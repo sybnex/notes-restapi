@@ -15,7 +15,7 @@ class MyApi(Api):
         return url_for(self.endpoint('specs'), _external=True, _scheme=scheme)
 
 app = Flask(__name__)
-api = MyApi(app)
+api = Api(app)
 
 notes = [
     {
