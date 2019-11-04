@@ -33,6 +33,12 @@ spec:
       - name: note
         image: sybex/note-service:0.${DRONE_BUILD_NUMBER}
         imagePullPolicy: Always
+        env:
+        - name: TELEGRAM_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: note-token
+              key: token
         resources:
           limits:
             cpu: 200m

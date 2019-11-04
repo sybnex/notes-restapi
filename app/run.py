@@ -1,11 +1,27 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# This program is dedicated to the public domain under the CC0 license.
+
 from flask import Flask
 from flask_restful import Api, Resource, reqparse
 
+import os
 import sys
+import pickle
 import logging
+import requests
+from uuid import uuid4
+
+from telegram import InlineQueryResultArticle, ParseMode, \
+    InputTextMessageContent
+from telegram.ext import Updater, InlineQueryHandler, CommandHandler
+from telegram.utils.helpers import escape_markdown
+
 logging.basicConfig(stream=sys.stdout,
                     level=logging.INFO,
                     format="%(asctime)s %(levelname)-5s: %(message)s")
+
+logger = logging.getLogger(__name__)
 
 class MyApi(Api):
     @property
@@ -20,11 +36,11 @@ api = MyApi(app)
 notes = [
     {
         "name": "light",
-        "data": False
+        "data": "false"
     },
     {
         "name": "healthz",
-        "data": True
+        "data": "true"
     }
 ]
 
@@ -75,6 +91,40 @@ class Note(Resource):
       
 api.add_resource(Note, "/note/<string:name>")
 
+# --- BOT ---
+# Define a few command handlers. These usually take the two arguments update and
+# context. Error handlers also receive the raised TelegramError object in error.
+def lighton(update, context):
+    r = requests.put("https://notes.julina.ch/note/light?data=true")
+
+def lightoff(update, context):
+    r = requests.put("https://notes.julina.ch/note/light?data=false")
+
+def error(update, context):
+    """Log Errors caused by Updates."""
+    logger.warning('Update "%s" caused error "%s"', update, context.error)
+
 if __name__ == '__main__':
+    # Create the Updater and pass it your bot's token.
+    # Make sure to set use_context=True to use the new context based callbacks
+    # Post version 12 this will no longer be necessary
+
+    token = os.environ["TELEGRAM_TOKEN"]
+    updater = Updater(token, use_context=True)
+
+    # Get the dispatcher to register handlers
+    dp = updater.dispatcher
+
+    # on different commands - answer in Telegram
+    dp.add_handler(CommandHandler("lighton",  lighton))
+    dp.add_handler(CommandHandler("lightoff", lightoff))
+
+    # log all errors
+    dp.add_error_handler(error)
+
+    # Start the Bot
+    updater.start_polling()
+
+    # Start flask
     app.run(host='0.0.0.0', threaded=True, debug=True)
 

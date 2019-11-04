@@ -1,5 +1,5 @@
 kind: pipeline
-name: badge-backend
+name: note-backend
 
 steps:
 - name: build
@@ -22,7 +22,11 @@ steps:
     kubernetes_token:
       from_secret: kubernetes_server_token
   commands:
-    - kubectl apply -f deployment.yaml
+    - kubectl -n tools create secret generic note-secret --from-literal=token=$TOKEN
+    - kubectl -n tools apply -f deployment.yaml
+  environment:
+    TOKEN: 
+      from_secret: pipeline_bot
 
 - name: notify
   image: appleboy/drone-telegram
