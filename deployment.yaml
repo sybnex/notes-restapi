@@ -1,0 +1,79 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: note-service
+  namespace: tools
+  labels:
+    app: note
+spec:
+  ports:
+  - name: http
+    port: 5000
+    protocol: TCP
+    targetPort: 5000
+  selector:
+    app: note
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: note-deploy
+  namespace: tools
+spec:
+  selector:
+    matchLabels:
+      app: note
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: note
+    spec:
+      containers:
+      - name: note
+        image: sybex/note-service:0.${DRONE_BUILD_NUMBER}
+        imagePullPolicy: Always
+        resources:
+          limits:
+            cpu: 200m
+            memory: 100Mi
+          requests:
+            cpu: 100m
+            memory: 10Mi
+        ports:
+        - containerPort: 5000
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 5000
+          initialDelaySeconds: 2
+          timeoutSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 5000
+          initialDelaySeconds: 5
+          timeoutSeconds: 10
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: note-ingress
+  namespace: tools
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  tls:
+  - hosts:
+    - notes.julina.ch
+    secretName: tls-note-ingress
+  rules:
+  - host: notes.julina.ch
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: note-service
+          servicePort: 5000

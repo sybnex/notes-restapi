@@ -1,0 +1,42 @@
+kind: pipeline
+name: badge-backend
+
+steps:
+- name: build
+  image: plugins/docker
+  settings:
+    repo: sybex/note-service
+    tags:
+      - latest
+      - 0.${DRONE_BUILD_NUMBER}
+    username:
+      from_secret: docker_username
+    password:
+      from_secret: docker_password
+
+- name: deploy
+  image: sybex/drone-kubectl
+  settings:
+    kubernetes_server:
+      from_secret: kubernetes_server_url
+    kubernetes_token:
+      from_secret: kubernetes_server_token
+  commands:
+    - kubectl apply -f deployment.yaml
+
+- name: notify
+  image: appleboy/drone-telegram
+  when:
+    status:
+    - success
+    - failure
+  settings:
+    token:
+      from_secret: pipeline_bot
+    to: 146910928
+    message: >
+      {{#success build.status}}
+      Build [{{build.number}}]({{build.link}}) for {{repo.name}} succeeded. Good job.
+      {{else}}
+      Build [{{build.number}}]({{build.link}}) for {{repo.name}} failed. Fix me please.
+      {{/success}}
