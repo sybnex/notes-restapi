@@ -2,12 +2,11 @@
 # -*- coding: utf-8 -*-
 # This program is dedicated to the public domain under the CC0 license.
 
-from flask import Flask
-from flask_restful import Api, Resource, reqparse
+from flask import Flask, Response, url_for
+from flask_restplus import Api, Resource, reqparse
 
 import os
 import sys
-import json
 import logging
 import requests
 
@@ -25,12 +24,12 @@ class MyApi(Api):
     def specs_url(self):
         """Monkey patch for HTTPS"""
         scheme = 'http' if '5000' in self.base_url else 'https'
-        return Flask.url_for(self.endpoint('specs'),
-                             _external=True, _scheme=scheme)
+        return url_for(self.endpoint('specs'), _external=True, _scheme=scheme)
 
 
 app = Flask(__name__)
-api = MyApi(app)
+api = MyApi(app, version="1.0", title="Noteservice API",
+            description="A simple API")
 
 notes = [{"name": "light",
           "data": "false"},
@@ -38,17 +37,16 @@ notes = [{"name": "light",
           "data": "true"}]
 
 
+@api.route("/<name>")
+@api.representation("application/json")
 class Note(Resource):
-    @api.representation("application/json")
+
     def get(self, name):
         for note in notes:
             if(name == note["name"]):
-                retVal = api.make_response(json.dumps(note), 200)
-            else:
-                text = {"error": "Note not found"}
-                retVal = api.make_response(json.dumps(text), 404)
-        retVal.headers.extend({})
-        return retVal
+                return Response(note, mimetype="application/json")
+
+        api.abort(404)
 
     def post(self, name):
         parser = reqparse.RequestParser()
@@ -57,14 +55,13 @@ class Note(Resource):
 
         for note in notes:
             if(name == note["name"]):
-                return "Note with name {} already exists".format(name), 400
+                response = {"status": False}
+                return Response(response, mimetype="application/json"), 400
 
-        note = {
-            "name": name,
-            "data": args["data"]
-        }
+        note = {"name": name,
+                "data": args["data"]}
         notes.append(note)
-        return note, 201
+        return Response(note, mimetype="application/json")
 
     def put(self, name):
         parser = reqparse.RequestParser()
@@ -74,22 +71,18 @@ class Note(Resource):
         for note in notes:
             if(name == note["name"]):
                 note["data"] = args["data"]
-                return note, 200
+                return Response(note, mimetype="application/json")
 
-        note = {
-            "name": name,
-            "data": args["data"]
-        }
+        note = {"name": name,
+                "data": args["data"]}
         notes.append(note)
-        return note, 201
+        return Response(note, mimetype="application/json"), 201
 
     def delete(self, name):
         global notes
         notes = [note for note in notes if note["name"] != name]
-        return "{} is deleted.".format(name), 200
-
-
-api.add_resource(Note, "/note/<string:name>")
+        response = {"status": True}
+        return Response(response, mimetype="application/json")
 
 
 # --- BOT ---

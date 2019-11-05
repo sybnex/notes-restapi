@@ -1,0 +1,6 @@
+flask
+flask-restplus
+flake8
+requests
+python-telegram-bot
+datetime
