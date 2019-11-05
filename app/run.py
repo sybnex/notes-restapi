@@ -7,15 +7,10 @@ from flask_restful import Api, Resource, reqparse
 
 import os
 import sys
-import pickle
 import logging
 import requests
-from uuid import uuid4
 
-from telegram import InlineQueryResultArticle, ParseMode, \
-    InputTextMessageContent
-from telegram.ext import Updater, InlineQueryHandler, CommandHandler
-from telegram.utils.helpers import escape_markdown
+from telegram.ext import Updater, CommandHandler
 
 logging.basicConfig(stream=sys.stdout,
                     level=logging.INFO,
@@ -23,26 +18,24 @@ logging.basicConfig(stream=sys.stdout,
 
 logger = logging.getLogger(__name__)
 
+
 class MyApi(Api):
     @property
     def specs_url(self):
         """Monkey patch for HTTPS"""
         scheme = 'http' if '5000' in self.base_url else 'https'
-        return url_for(self.endpoint('specs'), _external=True, _scheme=scheme)
+        return Flask.url_for(self.endpoint('specs'),
+                             _external=True, _scheme=scheme)
+
 
 app = Flask(__name__)
 api = MyApi(app)
 
-notes = [
-    {
-        "name": "light",
-        "data": "false"
-    },
-    {
-        "name": "healthz",
-        "data": "true"
-    }
-]
+notes = [{"name": "light",
+          "data": "false"},
+         {"name": "healthz",
+          "data": "true"}]
+
 
 class Note(Resource):
     def get(self, name):
@@ -76,7 +69,7 @@ class Note(Resource):
             if(name == note["name"]):
                 note["data"] = args["data"]
                 return note, 200
-        
+
         note = {
             "name": name,
             "data": args["data"]
@@ -88,21 +81,26 @@ class Note(Resource):
         global notes
         notes = [note for note in notes if note["name"] != name]
         return "{} is deleted.".format(name), 200
-      
+
+
 api.add_resource(Note, "/note/<string:name>")
 
+
 # --- BOT ---
-# Define a few command handlers. These usually take the two arguments update and
-# context. Error handlers also receive the raised TelegramError object in error.
+# Define few command handlers. These usually take the two arguments update and
+# context. Error handlers also receive the raised TelegramError object in error
 def lighton(update, context):
-    r = requests.put("https://notes.julina.ch/note/light?data=true")
+    requests.put("https://notes.julina.ch/note/light?data=true")
+
 
 def lightoff(update, context):
-    r = requests.put("https://notes.julina.ch/note/light?data=false")
+    requests.put("https://notes.julina.ch/note/light?data=false")
+
 
 def error(update, context):
     """Log Errors caused by Updates."""
     logger.warning('Update "%s" caused error "%s"', update, context.error)
+
 
 if __name__ == '__main__':
     # Create the Updater and pass it your bot's token.
@@ -127,4 +125,3 @@ if __name__ == '__main__':
 
     # Start flask
     app.run(host='0.0.0.0', threaded=True, debug=True)
-
