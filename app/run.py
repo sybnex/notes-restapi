@@ -38,12 +38,14 @@ notes = [{"name": "light",
 
 
 class Note(Resource):
+    @api.representation("application/json")
     def get(self, name):
         for note in notes:
             if(name == note["name"]):
                 return note, 200
         return "Note not found", 404
 
+    @api.representation("application/json")
     def post(self, name):
         parser = reqparse.RequestParser()
         parser.add_argument("data")
@@ -60,6 +62,7 @@ class Note(Resource):
         notes.append(note)
         return note, 201
 
+    @api.representation("application/json")
     def put(self, name):
         parser = reqparse.RequestParser()
         parser.add_argument("data")
@@ -77,6 +80,7 @@ class Note(Resource):
         notes.append(note)
         return note, 201
 
+    @api.representation("application/json")
     def delete(self, name):
         global notes
         notes = [note for note in notes if note["name"] != name]
@@ -91,10 +95,29 @@ api.add_resource(Note, "/note/<string:name>")
 # context. Error handlers also receive the raised TelegramError object in error
 def lighton(update, context):
     requests.put("https://notes.julina.ch/note/light?data=true")
+    update.message.reply_text('Light on!')
 
 
 def lightoff(update, context):
     requests.put("https://notes.julina.ch/note/light?data=false")
+    update.message.reply_text('Light off!')
+
+
+def dinneron(update, context):
+    requests.put("https://notes.julina.ch/note/dinner?data=true")
+    update.message.reply_text('Light on!')
+
+
+def dinneroff(update, context):
+    requests.put("https://notes.julina.ch/note/dinner?data=false")
+    update.message.reply_text('Light off!')
+
+
+def status(update, context):
+    light = requests.get("https://notes.julina.ch/note/light")
+    dinner = requests.get("https://notes.julina.ch/note/dinner")
+    text = "Light: %s, Dinner %s", light["data"], dinner["data"]
+    update.message.reply_text(text)
 
 
 def error(update, context):
@@ -116,6 +139,9 @@ if __name__ == '__main__':
     # on different commands - answer in Telegram
     dp.add_handler(CommandHandler("lighton",  lighton))
     dp.add_handler(CommandHandler("lightoff", lightoff))
+    dp.add_handler(CommandHandler("dinneron",  dinneron))
+    dp.add_handler(CommandHandler("dinneroff", dinneroff))
+    dp.add_handler(CommandHandler("status", status))
 
     # log all errors
     dp.add_error_handler(error)
