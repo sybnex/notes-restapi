@@ -7,6 +7,7 @@ from flask_restful import Api, Resource, reqparse
 
 import os
 import sys
+import json
 import logging
 import requests
 
@@ -42,10 +43,13 @@ class Note(Resource):
     def get(self, name):
         for note in notes:
             if(name == note["name"]):
-                return note, 200
-        return "Note not found", 404
+                retVal = api.make_response(json.dumps(note), 200)
+            else:
+                text = {"error": "Note not found"}
+                retVal = api.make_response(json.dumps(text), 404)
+        retVal.headers.extend({})
+        return retVal
 
-    @api.representation("application/json")
     def post(self, name):
         parser = reqparse.RequestParser()
         parser.add_argument("data")
@@ -62,7 +66,6 @@ class Note(Resource):
         notes.append(note)
         return note, 201
 
-    @api.representation("application/json")
     def put(self, name):
         parser = reqparse.RequestParser()
         parser.add_argument("data")
@@ -80,7 +83,6 @@ class Note(Resource):
         notes.append(note)
         return note, 201
 
-    @api.representation("application/json")
     def delete(self, name):
         global notes
         notes = [note for note in notes if note["name"] != name]
