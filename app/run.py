@@ -39,6 +39,9 @@ notes = [{"name": "light", "data": "false"},
 @api.route("/<name>")
 class Note(Resource):
 
+    @api.doc(params={"name": "Name of the note"})
+    @api.doc(responses={200: "Success",
+                        404: "Not Found"})
     def get(self, name):
         for note in notes:
             if(name == note["name"]):
@@ -46,6 +49,10 @@ class Note(Resource):
 
         api.abort(404)
 
+    @api.doc(params={"name": "Name of the note",
+                     "data": "Content of note"})
+    @api.doc(responses={200: "Success",
+                        405: "Note already exist"})
     def post(self, name):
         parser = reqparse.RequestParser()
         parser.add_argument("data")
@@ -60,6 +67,10 @@ class Note(Resource):
         notes.append(note)
         return note, 200
 
+    @api.doc(params={"name": "Name of the note",
+                     "data": "Content of note"})
+    @api.doc(responses={200: "Success",
+                        201: "Note created"})
     def put(self, name):
         parser = reqparse.RequestParser()
         parser.add_argument("data")
@@ -75,6 +86,8 @@ class Note(Resource):
         notes.append(note)
         return note, 201
 
+    @api.doc(params={"name": "Name of the note"})
+    @api.doc(responses={200: "Success"})
     def delete(self, name):
         global notes
         notes = [note for note in notes if note["name"] != name]
