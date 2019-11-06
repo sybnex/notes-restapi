@@ -98,28 +98,28 @@ class Note(Resource):
 # Define few command handlers. These usually take the two arguments update and
 # context. Error handlers also receive the raised TelegramError object in error
 def lighton(update, context):
-    requests.put("https://notes.julina.ch/note/light?data=true")
+    requests.put("https://notes.julina.ch/light?data=true")
     update.message.reply_text('Light on!')
 
 
 def lightoff(update, context):
-    requests.put("https://notes.julina.ch/note/light?data=false")
+    requests.put("https://notes.julina.ch/light?data=false")
     update.message.reply_text('Light off!')
 
 
 def dinneron(update, context):
-    requests.put("https://notes.julina.ch/note/dinner?data=true")
-    update.message.reply_text('Light on!')
+    requests.put("https://notes.julina.ch/dinner?data=true")
+    update.message.reply_text('Dinner on!')
 
 
 def dinneroff(update, context):
-    requests.put("https://notes.julina.ch/note/dinner?data=false")
-    update.message.reply_text('Light off!')
+    requests.put("https://notes.julina.ch/dinner?data=false")
+    update.message.reply_text('Dinner off!')
 
 
 def status(update, context):
-    light = requests.get("https://notes.julina.ch/note/light")
-    dinner = requests.get("https://notes.julina.ch/note/dinner")
+    light = requests.get("https://notes.julina.ch/light")
+    dinner = requests.get("https://notes.julina.ch/dinner")
     text = "Light: %s, Dinner %s", light["data"], dinner["data"]
     update.message.reply_text(text)
 
@@ -136,6 +136,7 @@ if __name__ == '__main__':
 
     token = os.environ["TELEGRAM_TOKEN"]
     if token != "":
+        logger.info("Starting Bot")
         updater = Updater(token, use_context=True)
 
         # Get the dispatcher to register handlers
@@ -153,6 +154,9 @@ if __name__ == '__main__':
 
         # Start the Bot
         updater.start_polling()
+    else:
+        logger.error("Not token found to start Bot!")
 
     # Start flask
     app.run(host='0.0.0.0', threaded=True, debug=True)
+
