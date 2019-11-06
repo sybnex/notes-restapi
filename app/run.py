@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # This program is dedicated to the public domain under the CC0 license.
 
-from flask import Flask, Response, url_for
+from flask import Flask, url_for
 from flask_restplus import Api, Resource, reqparse
 
 import os
@@ -31,20 +31,18 @@ app = Flask(__name__)
 api = MyApi(app, version="1.0", title="Noteservice API",
             description="A simple API")
 
-notes = [{"name": "light",
-          "data": "false"},
-         {"name": "healthz",
-          "data": "true"}]
+notes = [{"name": "light", "data": "false"},
+         {"name": "dinner", "data": "false"},
+         {"name": "healthz", "data": "true"}]
 
 
 @api.route("/<name>")
-@api.representation("application/json")
 class Note(Resource):
 
     def get(self, name):
         for note in notes:
             if(name == note["name"]):
-                return Response(note, mimetype="application/json")
+                return note, 200
 
         api.abort(404)
 
@@ -55,13 +53,12 @@ class Note(Resource):
 
         for note in notes:
             if(name == note["name"]):
-                response = {"status": False}
-                return Response(response, mimetype="application/json"), 400
+                api.abort(405)
 
         note = {"name": name,
                 "data": args["data"]}
         notes.append(note)
-        return Response(note, mimetype="application/json")
+        return note, 200
 
     def put(self, name):
         parser = reqparse.RequestParser()
@@ -71,18 +68,17 @@ class Note(Resource):
         for note in notes:
             if(name == note["name"]):
                 note["data"] = args["data"]
-                return Response(note, mimetype="application/json")
+                return note, 200
 
         note = {"name": name,
                 "data": args["data"]}
         notes.append(note)
-        return Response(note, mimetype="application/json"), 201
+        return note, 201
 
     def delete(self, name):
         global notes
         notes = [note for note in notes if note["name"] != name]
-        response = {"status": True}
-        return Response(response, mimetype="application/json")
+        return {}, 200
 
 
 # --- BOT ---
@@ -126,23 +122,24 @@ if __name__ == '__main__':
     # Post version 12 this will no longer be necessary
 
     token = os.environ["TELEGRAM_TOKEN"]
-    updater = Updater(token, use_context=True)
+    if token != "":
+        updater = Updater(token, use_context=True)
 
-    # Get the dispatcher to register handlers
-    dp = updater.dispatcher
+        # Get the dispatcher to register handlers
+        dp = updater.dispatcher
 
-    # on different commands - answer in Telegram
-    dp.add_handler(CommandHandler("lighton",  lighton))
-    dp.add_handler(CommandHandler("lightoff", lightoff))
-    dp.add_handler(CommandHandler("dinneron",  dinneron))
-    dp.add_handler(CommandHandler("dinneroff", dinneroff))
-    dp.add_handler(CommandHandler("status", status))
+        # on different commands - answer in Telegram
+        dp.add_handler(CommandHandler("lighton",  lighton))
+        dp.add_handler(CommandHandler("lightoff", lightoff))
+        dp.add_handler(CommandHandler("dinneron",  dinneron))
+        dp.add_handler(CommandHandler("dinneroff", dinneroff))
+        dp.add_handler(CommandHandler("status", status))
 
-    # log all errors
-    dp.add_error_handler(error)
+        # log all errors
+        dp.add_error_handler(error)
 
-    # Start the Bot
-    updater.start_polling()
+        # Start the Bot
+        updater.start_polling()
 
     # Start flask
     app.run(host='0.0.0.0', threaded=True, debug=True)
