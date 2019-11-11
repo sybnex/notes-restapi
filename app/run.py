@@ -33,6 +33,7 @@ api = MyApi(app, version="1.0", title="Noteservice API",
 
 notes = [{"name": "light", "data": "false"},
          {"name": "dinner", "data": "false"},
+         {"name": "vacation", "data": "false"},
          {"name": "healthz", "data": "true"}]
 
 
@@ -117,10 +118,20 @@ def dinneroff(update, context):
     update.message.reply_text('Dinner off!')
 
 
+def vacationon(update, context):
+    requests.put("https://notes.julina.ch/vacation?data=true")
+    update.message.reply_text('Dinner off!')
+
+
+def vacationoff(update, context):
+    requests.put("https://notes.julina.ch/vacation?data=false")
+    update.message.reply_text('Dinner off!')
+
+
 def status(update, context):
     light = requests.get("https://notes.julina.ch/light")
     dinner = requests.get("https://notes.julina.ch/dinner")
-    text = "Light: %s, Dinner %s", light["data"], dinner["data"]
+    text = "Light: %s, Dinner %s", light, dinner
     update.message.reply_text(text)
 
 
