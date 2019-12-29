@@ -10,7 +10,8 @@ import logging
 import requests
 import schedule
 
-from telegram.ext import Updater, CommandHandler
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Updater, CommandHandler, CallbackQueryHandler
 
 logging.basicConfig(stream=sys.stdout,
                     level=logging.INFO,
@@ -110,11 +111,24 @@ class Note(Resource):
 # --- BOT ---
 # Define few command handlers. These usually take the two arguments update and
 # context. Error handlers also receive the raised TelegramError object in error
+def button(update, context):
+    query = update.callback_query
+    query.edit_message_text(text="Selected option: {}".format(query.data))
+
+
 def light(update, context):
-    switch = True if context.args[0] == "on" else False
-    requests.put("http://localhost:5000/light",
-                 json={"data": {"value": switch}})
-    update.message.reply_text('Light %s!' % context.args[0])
+    if not context.args[0]:
+        keyboard = [[InlineKeyboardButton("On", callback_data='on'),
+                     InlineKeyboardButton("Off", callback_data='off')],
+                    [InlineKeyboardButton("Unknown", callback_data='3')]]
+
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        update.message.reply_text('Please choose:', reply_markup=reply_markup)
+    else:
+        switch = True if context.args[0] == "on" else False
+        requests.put("http://localhost:5000/light",
+                     json={"data": {"value": switch}})
+        update.message.reply_text('Light %s!' % context.args[0])
 
 
 def dinner(update, context):
@@ -158,6 +172,7 @@ if __name__ == '__main__':
         dp = updater.dispatcher
 
         # on different commands - answer in Telegram
+        dp.add_handler(CallbackQueryHandler(button))
         dp.add_handler(CommandHandler("light",  light, pass_args=True))
         dp.add_handler(CommandHandler("dinner",  dinner, pass_args=True))
         dp.add_handler(CommandHandler("vacation",  vacation, pass_args=True))
