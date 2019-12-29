@@ -41,6 +41,11 @@ spec:
             secretKeyRef:
               name: note-secret
               key: token
+        - name: WEATHER_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: note-secret
+              key: weather_token
         resources:
           limits:
             cpu: 200m

@@ -2,10 +2,9 @@
 set -e
 
 APP="note-service"
-VERSION="0.12"
+VERSION="dev"
 
 rm -f app/*.pyc
 docker build -t sybex/$APP:$VERSION .
 bash -c "docker stop $APP; exit 0"
-#docker push sybex/$APP:$VERSION
-docker run --rm -p 5000:5000 -e TELEGRAM_TOKEN=$TOKEN --name $APP sybex/$APP:$VERSION
+docker run --rm -p 5000:5000 -e TELEGRAM_TOKEN=$TELEGRAM_TOKEN -e WEATHER_TOKEN=$WEATHER_TOKEN --name $APP sybex/$APP:$VERSION

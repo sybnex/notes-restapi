@@ -22,8 +22,6 @@ steps:
     kubernetes_token:
       from_secret: kubernetes_server_token
   commands:
-    - kubectl -n tools delete secret note-secret
-    - kubectl -n tools create secret generic note-secret --from-literal=token=$TOKEN
     - kubectl -n tools apply -f deployment.yaml
   environment:
     TOKEN: 
