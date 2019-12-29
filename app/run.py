@@ -12,6 +12,7 @@ import schedule
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler
+from ast import literal_eval
 
 logging.basicConfig(stream=sys.stdout,
                     level=logging.INFO,
@@ -111,37 +112,43 @@ class Note(Resource):
 # --- BOT ---
 # Define few command handlers. These usually take the two arguments update and
 # context. Error handlers also receive the raised TelegramError object in error
-def setStatus(update, obj, status):
+def defKeyboard(obj):
+    keyboard = [[InlineKeyboardButton("An",
+                 callback_data='{"obj": %s, "value": "on"}' % obj),
+                 InlineKeyboardButton("Aus",
+                 callback_data='{"obj": %s, "value": "off"}' % obj)]]
+    return keyboard
+
+
+def setStatus(query, obj, status):
     switch = True if status == "on" else False
     requests.put("http://localhost:5000/%s" % obj,
                  json={"data": {"value": switch}})
-    update.message.reply_text('%s %s!' % (obj, status))
+    query.edit_message_text(text='%s %s!' % (obj, status))
 
 
 def button(update, context):
     query = update.callback_query
-    query.edit_message_text(text="Selected option: {}".format(query.data))
+    answer = literal_eval(query.data)
+    setStatus(query, answer["obj"], answer["value"])
 
 
 def light(update, context):
-    logger.info('Got Args: %s' % context.args)
-    if context.args:
-        keyboard = [[InlineKeyboardButton("On", callback_data='on'),
-                     InlineKeyboardButton("Off", callback_data='off')],
-                    [InlineKeyboardButton("Unknown", callback_data='3')]]
-
-        reply_markup = InlineKeyboardMarkup(keyboard)
-        update.message.reply_text('Please choose:', reply_markup=reply_markup)
-    else:
-        setStatus(update, "light", context.args[0])
+    reply_markup = InlineKeyboardMarkup(defKeyboard("light"))
+    update.message.reply_text('Licht an oder aus?:',
+                              reply_markup=reply_markup)
 
 
 def dinner(update, context):
-    setStatus(update, "dinner", context.args[0])
+    reply_markup = InlineKeyboardMarkup(defKeyboard("dinner"))
+    update.message.reply_text('Dinner an oder aus?:',
+                              reply_markup=reply_markup)
 
 
 def vacation(update, context):
-    setStatus(update, "vacation", context.args[0])
+    reply_markup = InlineKeyboardMarkup(defKeyboard("vacation"))
+    update.message.reply_text('Urlaub an oder aus?:',
+                              reply_markup=reply_markup)
 
 
 def status(update, context):
