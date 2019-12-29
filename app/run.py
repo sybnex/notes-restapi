@@ -114,43 +114,27 @@ def light(update, context):
     switch = True if context.args[0] == "on" else False
     requests.put("http://localhost:5000/light",
                  json={"data": {"value": switch}})
-    update.message.reply_text('Light %s!' % switch)
+    update.message.reply_text('Light %s!' % context.args[0])
 
 
-def lighton(update, context):
-    requests.put("http://localhost:5000/light?data=false")
-    update.message.reply_text('Light on!')
+def dinner(update, context):
+    switch = True if context.args[0] == "on" else False
+    requests.put("http://localhost:5000/dinner",
+                 json={"data": {"value": switch}})
+    update.message.reply_text('Dinner %s!' % context.args[0])
 
 
-def lightoff(update, context):
-    requests.put("https://notes.julina.ch/light?data=false")
-    update.message.reply_text('Light off!')
-
-
-def dinneron(update, context):
-    requests.put("https://notes.julina.ch/dinner?data=true")
-    update.message.reply_text('Dinner on!')
-
-
-def dinneroff(update, context):
-    requests.put("https://notes.julina.ch/dinner?data=false")
-    update.message.reply_text('Dinner off!')
-
-
-def vacationon(update, context):
-    requests.put("https://notes.julina.ch/vacation?data=true")
-    update.message.reply_text('Dinner off!')
-
-
-def vacationoff(update, context):
-    requests.put("https://notes.julina.ch/vacation?data=false")
-    update.message.reply_text('Dinner off!')
+def vacation(update, context):
+    switch = True if context.args[0] == "on" else False
+    requests.put("http://localhost:5000/vacation",
+                 json={"data": {"value": switch}})
+    update.message.reply_text('Vacation %s!' % context.args[0])
 
 
 def status(update, context):
-    light = requests.get("https://notes.julina.ch/light")
-    dinner = requests.get("https://notes.julina.ch/dinner")
-    text = "Light: %s, Dinner %s", light, dinner
+    light = requests.get("http://localhost:5000/light").json()
+    dinner = requests.get("http://localhost:5000/dinner").json()
+    text = "Light: %s, Dinner %s", light["value"], dinner["value"]
     update.message.reply_text(text)
 
 
@@ -175,10 +159,8 @@ if __name__ == '__main__':
 
         # on different commands - answer in Telegram
         dp.add_handler(CommandHandler("light",  light, pass_args=True))
-        dp.add_handler(CommandHandler("lighton",  lighton))
-        dp.add_handler(CommandHandler("lightoff", lightoff))
-        dp.add_handler(CommandHandler("dinneron",  dinneron))
-        dp.add_handler(CommandHandler("dinneroff", dinneroff))
+        dp.add_handler(CommandHandler("dinner",  dinner, pass_args=True))
+        dp.add_handler(CommandHandler("vacation",  vacation, pass_args=True))
         dp.add_handler(CommandHandler("status", status))
 
         # log all errors
