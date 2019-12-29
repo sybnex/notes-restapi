@@ -111,13 +111,20 @@ class Note(Resource):
 # --- BOT ---
 # Define few command handlers. These usually take the two arguments update and
 # context. Error handlers also receive the raised TelegramError object in error
+def setStatus(update, obj, status):
+    switch = True if status == "on" else False
+    requests.put("http://localhost:5000/%s" % obj,
+                 json={"data": {"value": switch}})
+    update.message.reply_text('%s %s!' % (obj, status))
+
+
 def button(update, context):
     query = update.callback_query
     query.edit_message_text(text="Selected option: {}".format(query.data))
 
 
 def light(update, context):
-    if not context.args[0]:
+    if len(context.args[0]) == 0:
         keyboard = [[InlineKeyboardButton("On", callback_data='on'),
                      InlineKeyboardButton("Off", callback_data='off')],
                     [InlineKeyboardButton("Unknown", callback_data='3')]]
@@ -125,30 +132,21 @@ def light(update, context):
         reply_markup = InlineKeyboardMarkup(keyboard)
         update.message.reply_text('Please choose:', reply_markup=reply_markup)
     else:
-        switch = True if context.args[0] == "on" else False
-        requests.put("http://localhost:5000/light",
-                     json={"data": {"value": switch}})
-        update.message.reply_text('Light %s!' % context.args[0])
+        setStatus(update, "light", context.args[0])
 
 
 def dinner(update, context):
-    switch = True if context.args[0] == "on" else False
-    requests.put("http://localhost:5000/dinner",
-                 json={"data": {"value": switch}})
-    update.message.reply_text('Dinner %s!' % context.args[0])
+    setStatus(update, "dinner", context.args[0])
 
 
 def vacation(update, context):
-    switch = True if context.args[0] == "on" else False
-    requests.put("http://localhost:5000/vacation",
-                 json={"data": {"value": switch}})
-    update.message.reply_text('Vacation %s!' % context.args[0])
+    setStatus(update, "vacation", context.args[0])
 
 
 def status(update, context):
     light = requests.get("http://localhost:5000/light").json()
     dinner = requests.get("http://localhost:5000/dinner").json()
-    text = "Light: %s, Dinner %s", light["value"], dinner["value"]
+    text = "Light: %s, Dinner %s" % (light["value"], dinner["value"])
     update.message.reply_text(text)
 
 
