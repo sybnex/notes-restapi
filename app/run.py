@@ -114,9 +114,9 @@ class Note(Resource):
 # context. Error handlers also receive the raised TelegramError object in error
 def defKeyboard(obj):
     keyboard = [[InlineKeyboardButton("An",
-                 callback_data={"obj": "%s" % obj, "value": "on"}),
+                 callback_data=str({"obj": "%s" % obj, "value": "on"})),
                  InlineKeyboardButton("Aus",
-                 callback_data={"obj": "%s" % obj, "value": "off"})]]
+                 callback_data=str({"obj": "%s" % obj, "value": "off"}))]]
     return keyboard
 
 
