@@ -124,7 +124,7 @@ def button(update, context):
 
 
 def light(update, context):
-    if len(context.args[0]) == 0:
+    if context.args:
         keyboard = [[InlineKeyboardButton("On", callback_data='on'),
                      InlineKeyboardButton("Off", callback_data='off')],
                     [InlineKeyboardButton("Unknown", callback_data='3')]]
