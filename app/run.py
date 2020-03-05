@@ -168,8 +168,13 @@ if __name__ == '__main__':
     # Make sure to set use_context=True to use the new context based callbacks
     # Post version 12 this will no longer be necessary
 
-    weather_token = os.environ["WEATHER_TOKEN"]
-    telegram_token = os.environ["TELEGRAM_TOKEN"]
+    try:
+      weather_token = os.environ["WEATHER_TOKEN"]
+      telegram_token = os.environ["TELEGRAM_TOKEN"]
+    except:
+      weather_token = None
+      telegram_token = None
+
     if telegram_token != "":
         logger.info("Found telegram token! Starting Bot ...")
         updater = Updater(telegram_token, use_context=True)
