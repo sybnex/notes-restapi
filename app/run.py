@@ -169,11 +169,11 @@ if __name__ == '__main__':
     # Post version 12 this will no longer be necessary
 
     try:
-      weather_token = os.environ["WEATHER_TOKEN"]
-      telegram_token = os.environ["TELEGRAM_TOKEN"]
-    except:
-      weather_token = None
-      telegram_token = None
+        weather_token = os.environ["WEATHER_TOKEN"]
+        telegram_token = os.environ["TELEGRAM_TOKEN"]
+    except Exception:
+        weather_token = None
+        telegram_token = None
 
     if telegram_token != "":
         logger.info("Found telegram token! Starting Bot ...")
