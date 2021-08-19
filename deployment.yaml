@@ -33,19 +33,16 @@ spec:
     spec:
       containers:
       - name: note
-        image: sybex/note-service:0.${DRONE_BUILD_NUMBER}
+        image: sybex/note-service
         imagePullPolicy: Always
         env:
-        - name: TELEGRAM_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: note-secret
-              key: token
         - name: WEATHER_TOKEN
           valueFrom:
             secretKeyRef:
-              name: note-secret
-              key: weather_token
+              name: weather-secret
+              key: token
+        - name: APPLICATION_ROOT
+          value: ""
         resources:
           limits:
             cpu: 200m
@@ -69,13 +66,13 @@ spec:
           initialDelaySeconds: 5
           timeoutSeconds: 10
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: note-ingress
   namespace: tools
   annotations:
-    kubernetes.io/ingress.class: nginx
+    kubernetes.io/ingress.class: traefik
     cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
   tls:
@@ -87,6 +84,9 @@ spec:
     http:
       paths:
       - path: /
+        pathType: Prefix
         backend:
-          serviceName: note-service
-          servicePort: 5000
+          service:
+            name: note-service
+            port:
+              number: 5000

@@ -30,6 +30,10 @@ class MyApi(Api):
 
 
 app = Flask(__name__)
+
+application_root = os.getenv("APPLICATION_ROOT", "")
+logger.info("Set application root to: %s" % application_root)
+
 api = MyApi(app, version="1.0", title="Noteservice API",
             description="A simple API")
 
@@ -37,20 +41,32 @@ api = MyApi(app, version="1.0", title="Noteservice API",
 notes = [{"name": "light", "data": {"value": False}},
          {"name": "dinner", "data": {"value": False}},
          {"name": "vacation", "data": {"value": False}},
-         {"name": "weather", "data": {}},
          {"name": "healthz", "data": {"value": True}}]
 
 
-def getWeather():
+@app.before_first_request
+def get_weather_first_time():
+    if weather_token:
+        getWeather(True)
+
+
+def getWeather(first_attempt=False):
+    name = "weather"
     url = "http://api.openweathermap.org/data/2.5/"
     url += "weather?id=7286216&units=metric&appid=%s" % weather_token
     response = requests.get(url, timeout=15)
     logging.info("Got weather data with code: %s" % response.status_code)
-    requests.put("http://localhost:5000/weather",
-                 json={"data": response.json()})
+
+    if first_attempt:
+        note = {"name": name,
+                "data": response.json()}
+        notes.append(note)
+    else:
+        requests.put(f"http://localhost:5000/{name}",
+                     json={"data": response.json()})
 
 
-@api.route("/<name>")
+@api.route(application_root + "/<name>")
 class Note(Resource):
 
     @api.doc(params={"name": "Name of the note"})
@@ -168,14 +184,9 @@ if __name__ == '__main__':
     # Make sure to set use_context=True to use the new context based callbacks
     # Post version 12 this will no longer be necessary
 
-    try:
-        weather_token = os.environ["WEATHER_TOKEN"]
-        telegram_token = os.environ["TELEGRAM_TOKEN"]
-    except Exception:
-        weather_token = None
-        telegram_token = None
-
-    if telegram_token != "":
+    # start telegram bot
+    telegram_token = os.getenv("TELEGRAM_TOKEN", None)
+    if telegram_token:
         logger.info("Found telegram token! Starting Bot ...")
         updater = Updater(telegram_token, use_context=True)
 
@@ -194,13 +205,12 @@ if __name__ == '__main__':
 
         # Start the Bot
         updater.start_polling()
-    else:
-        logger.error("Not token found to start Bot!")
 
     # Get weather every 5 min.
-    if weather_token != "":
+    weather_token = os.getenv("WEATHER_TOKEN", None)
+    if weather_token:
         logger.info("Found weather token. Starting scheduler ...")
         schedule.every(1).minutes.do(getWeather)
 
     # Start flask
-    app.run(host='0.0.0.0', threaded=True, debug=True)
+    app.run(host='0.0.0.0')

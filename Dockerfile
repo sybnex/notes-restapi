@@ -1,10 +1,10 @@
-FROM alpine
+FROM alpine:3.14
 LABEL maintainer="sybnex"
 
 ENV PYTHONPATH=/app
 
 COPY requirements.txt /
-RUN apk --no-cache add python3 py3-cryptography \
+RUN apk --no-cache add py3-pip py3-cryptography \
     && pip3 install --upgrade pip \
     && pip3 install -r /requirements.txt --no-cache-dir \
     && adduser -D note
